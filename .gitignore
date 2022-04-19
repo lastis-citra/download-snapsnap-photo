@@ -1,0 +1,7 @@
+/.idea/
+/venv/
+/output/
+/driver/
+/tmp/
+*.html
+*json
