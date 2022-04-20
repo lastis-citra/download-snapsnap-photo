@@ -14,7 +14,7 @@ import sys
 
 
 # 参考: https://hato.yokohama/scraping_sbi_investment/
-def login(user_id, user_password, driver_path):
+def login(user_id: str, user_password: str, driver_path: str):
     options = Options()
     service = cs.Service(executable_path=driver_path)
     # ヘッドレスモード(chromeを表示させないモード)
@@ -42,9 +42,26 @@ def login(user_id, user_password, driver_path):
     return driver
 
 
+# https://qiita.com/SKYS/items/cbde3775e2143cad7455
+def imwrite(filename, img, params=None):
+    try:
+        ext = os.path.splitext(filename)[1]
+        result, n = cv2.imencode(ext, img, params)
+
+        if result:
+            with open(filename, mode='w+b') as f:
+                n.tofile(f)
+            return True
+        else:
+            return False
+    except Exception as e:
+        print(e)
+        return False
+
+
 # Web上のファイルを直接cv2.imreadで読み込む
 # 参考: https://qiita.com/lt900ed/items/891e162a5a1091bae912
-def imread_web(url):
+def imread_web(url: str):
     # 画像をリクエストする
     res = requests.get(url)
     img = None
@@ -58,7 +75,7 @@ def imread_web(url):
 
 
 # img2にimg1の透かしがない部分をマージして，マージ後のimg1を返す
-def merge_photos(offset_x, offset_y, max_x, max_y, width, img1, img2):
+def merge_photos(offset_x: int, offset_y: int, max_x: int, max_y: int, width: int, img1, img2):
     for x in range(max_x):
         for y in range(max_y):
             # width*widthのサイズで切り出す
@@ -74,10 +91,11 @@ def merge_photos(offset_x, offset_y, max_x, max_y, width, img1, img2):
     return img1
 
 
-def process_one_photo(driver, url, page, max_page):
+def process_one_photo(driver, name: str, url: str, page: int, max_page: int):
     img1 = None
     img2 = None
-    output_dir = './output/'
+    output_dir = f'./output/{name}/'
+    os.makedirs(output_dir, exist_ok=True)
 
     if driver is not None:
         html = driver.page_source.encode('utf-8')
@@ -139,7 +157,7 @@ def process_one_photo(driver, url, page, max_page):
         img1 = merge_photos(offset_x2, offset_y2, 10, 15, area_size, img1, img2)
     else:
         print('Check photo size!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-    cv2.imwrite(f'{output_dir}{photo_number}.jpg', img1)
+    imwrite(f'{output_dir}{photo_number}.jpg', img1)
 
     if driver is not None:
         # disabled="disabled"という属性がついている場合は次の写真はない
@@ -156,17 +174,17 @@ def process_one_photo(driver, url, page, max_page):
                     url = url.split('?page=')[0]
                 next_url = f'{url}?page={str(page)}'
                 print(f'next_url: {next_url}')
-                get_photo_list(driver, next_url)
+                get_photo_list(driver, name, next_url)
             else:
-                exit()
+                return
 
-        # 遷移するまで待つ
-        time.sleep(2)
+        # ID指定したページ上の要素が読み込まれるまで待機（10秒でタイムアウト判定）
+        WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.CLASS_NAME, 'viewer-move')))
         # 再帰処理
-        process_one_photo(driver, url, page, max_page)
+        process_one_photo(driver, name, url, page, max_page)
 
 
-def get_photo_list(driver, url):
+def get_photo_list(driver, name: str, url: str):
     max_page = 0
     if driver is not None:
         # 写真一覧ページへ遷移
@@ -189,13 +207,23 @@ def get_photo_list(driver, url):
     page = 1
     if 'page=' in url:
         page = int(url.split('page=')[1])
-    process_one_photo(driver, url, page, max_page)
+    process_one_photo(driver, name, url, page, max_page)
+
+
+def input_urls():
+    file_name = 'input_urls.txt'
+    if os.path.exists(file_name):
+        with open(file_name, 'r', errors='replace', encoding="utf_8") as file:
+            line_list = file.readlines()
+    else:
+        line_list = None
+
+    return line_list
 
 
 def main():
     # 参考: https://algorithm.joho.info/programming/python/maximum-recursion-depth-exceeded-while-calling-a-python-object/
     sys.setrecursionlimit(10000)
-    url = os.environ.get('URL')
     user_id = os.environ.get('ID')
     user_password = os.environ.get('PASSWORD')
     driver_path = os.environ.get('DRIVER_PATH')
@@ -203,12 +231,22 @@ def main():
     debug_bool = False
     if debug == 'True':
         debug_bool = True
+
     if debug_bool:
         driver = None
     else:
         driver = login(user_id, user_password, driver_path)
 
-    get_photo_list(driver, url)
+    line_count = 0
+
+    line_list = input_urls()
+    for line in line_list:
+        line_count += 1
+        name = line.split(',')[0]
+        url = line.split(',')[1].replace('\n', '')
+        print(line_count, '/', len(line_list))
+
+        get_photo_list(driver, name, url)
 
     if not debug_bool:
         time.sleep(10000)
