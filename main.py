@@ -256,7 +256,7 @@ def get_photo_list(driver, url):
         driver.get(url)
 
         # 遷移するまで待つ
-        time.sleep(2)
+        time.sleep(5)
 
         html = driver.page_source.encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
