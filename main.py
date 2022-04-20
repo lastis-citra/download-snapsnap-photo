@@ -267,6 +267,7 @@ def get_photo_list(driver, url):
 
 
 def main():
+    url = os.environ.get('URL')
     user_id = os.environ.get('ID')
     user_password = os.environ.get('PASSWORD')
     driver_path = os.environ.get('DRIVER_PATH')
@@ -279,7 +280,6 @@ def main():
     else:
         driver = login(user_id, user_password, driver_path)
 
-    url = 'https://snapsnap.jp/events/1000450/albums/14659765/photos?page=3'
     get_photo_list(driver, url)
 
     if not debug_bool:
