@@ -13,13 +13,6 @@ import requests
 import sys
 
 
-def write_html(path, source):
-    # Windows向けの変換
-    html = source.encode('cp932', "ignore").decode('cp932')
-    with open(path, mode='w') as f:
-        f.write(html)
-
-
 # 参考: https://hato.yokohama/scraping_sbi_investment/
 def login(user_id, user_password, driver_path):
     options = Options()
@@ -121,84 +114,6 @@ def process_one_photo(driver, url, page, max_page):
         output_dir = './tmp/'
         img1 = cv2.imread('./tmp/1.jpg')
         img2 = cv2.imread('./tmp/2.jpg')
-        # photo_number = '3-2'
-        # output_dir = './tmp/'
-        # img1 = cv2.imread('./tmp/3.jpg')
-        # img2 = cv2.imread('./tmp/4.jpg')
-
-    # offset_x = 70
-    # offset_y = 0
-    # width = 124
-    # offset_x2 = offset_x - int(width / 2)
-    # offset_y2 = int(width / 2)
-    # for x in range(20):
-    #     piece_x = offset_x + x * width
-    #     cv2.line(img2,
-    #              pt1=(piece_x, 0),
-    #              pt2=(piece_x, 1350),
-    #              color=(255, 255, 255),
-    #              thickness=1,
-    #              lineType=cv2.LINE_4,
-    #              shift=0)
-    #
-    # for y in range(11):
-    #     piece_y = offset_y + y * width
-    #     cv2.line(img2,
-    #              pt1=(0, piece_y),
-    #              pt2=(1800, piece_y),
-    #              color=(255, 255, 255),
-    #              thickness=1,
-    #              lineType=cv2.LINE_4,
-    #              shift=0)
-    # # cv2.imshow('test', img2)
-    # # cv2.waitKey(0)
-    # cv2.imwrite('./tmp/2-test.jpg', img2)
-
-    # for x in range(20):
-    #     piece_x = offset_x2 + x * width
-    #     cv2.line(img2,
-    #              pt1=(piece_x, 0),
-    #              pt2=(piece_x, 1800),
-    #              color=(255, 255, 255),
-    #              thickness=1,
-    #              lineType=cv2.LINE_4,
-    #              shift=0)
-    #
-    # for y in range(11):
-    #     piece_y = offset_y2 + y * width
-    #     cv2.line(img2,
-    #              pt1=(0, piece_y),
-    #              pt2=(1350, piece_y),
-    #              color=(255, 255, 255),
-    #              thickness=1,
-    #              lineType=cv2.LINE_4,
-    #              shift=0)
-    # # cv2.imshow('test', img2)
-    # # cv2.waitKey(0)
-    # cv2.imwrite('./tmp/2-test2.jpg', img2)
-
-    # for x in range(20):
-    #     piece_x = offset_x + x * width
-    #     cv2.line(img1,
-    #              pt1=(piece_x, 0),
-    #              pt2=(piece_x, 1350),
-    #              color=(255, 255, 255),
-    #              thickness=1,
-    #              lineType=cv2.LINE_4,
-    #              shift=0)
-    #
-    # for y in range(11):
-    #     piece_y = offset_y + y * width
-    #     cv2.line(img1,
-    #              pt1=(0, piece_y),
-    #              pt2=(1800, piece_y),
-    #              color=(255, 255, 255),
-    #              thickness=1,
-    #              lineType=cv2.LINE_4,
-    #              shift=0)
-    # # cv2.imshow('test', img1)
-    # # cv2.waitKey(0)
-    # cv2.imwrite('./tmp/1-test.jpg', img1)
 
     # 画像サイズ取得
     height, width, channels = img1.shape[:3]
