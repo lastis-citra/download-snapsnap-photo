@@ -115,7 +115,7 @@ def process_one_photo(driver, name: str, url: str, page: int, max_page: int):
         # 1枚目の写真
         img_tag = soup.select_one('img[class="viewer-move"]')
         photo_number = img_tag['src'].split('.jpg')[0].split(')/')[1].replace('/', '-')
-        print(img_tag['src'])
+        # print(img_tag['src'])
 
         if '-02.' in img_tag['src']:
             img2 = imread_web(img_tag['src'])
@@ -133,7 +133,7 @@ def process_one_photo(driver, name: str, url: str, page: int, max_page: int):
 
         # 2枚目の写真
         img_tag = soup.select_one('img[class="viewer-move"]')
-        print(img_tag['src'])
+        # print(img_tag['src'])
         if '-02.' in img_tag['src']:
             img2 = imread_web(img_tag['src'])
         else:
@@ -146,7 +146,7 @@ def process_one_photo(driver, name: str, url: str, page: int, max_page: int):
 
     # 画像サイズ取得
     height, width, channels = img1.shape[:3]
-    print(f'width: {str(width)}, height: {str(height)}')
+    # print(f'width: {str(width)}, height: {str(height)}')
 
     # 横画像の場合
     if width == 1800 and height == 1350:
@@ -176,6 +176,10 @@ def process_one_photo(driver, name: str, url: str, page: int, max_page: int):
         if driver.find_element(by=By.CLASS_NAME, value='photosNext').get_attribute('disabled') is None:
             # 次の写真に遷移
             driver.find_element(by=By.CLASS_NAME, value='photosNext').click()
+            # ID指定したページ上の要素が読み込まれるまで待機（10秒でタイムアウト判定）
+            WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.CLASS_NAME, 'viewer-move')))
+            # 再帰処理
+            process_one_photo(driver, name, url, page, max_page)
         else:
             # # 写真詳細表示を閉じる
             # driver.find_element(by=By.CLASS_NAME, value='close').click()
@@ -186,13 +190,7 @@ def process_one_photo(driver, name: str, url: str, page: int, max_page: int):
                 next_url = f'{url}?page={str(page)}'
                 print(f'next_url: {next_url}')
                 get_photo_list(driver, name, next_url)
-            else:
-                return
-
-        # ID指定したページ上の要素が読み込まれるまで待機（10秒でタイムアウト判定）
-        WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.CLASS_NAME, 'viewer-move')))
-        # 再帰処理
-        process_one_photo(driver, name, url, page, max_page)
+    return
 
 
 def get_photo_list(driver, name: str, url: str):
