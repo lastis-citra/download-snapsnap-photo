@@ -235,7 +235,10 @@ def process_one_photo(driver, url, page, max_page):
             # driver.find_element(by=By.CLASS_NAME, value='close').click()
             page += 1
             if page <= max_page:
+                if '?page=' in url:
+                    url = int(url.split('?page=')[0])
                 next_url = f'{url}?page={str(page)}'
+                print(f'next_url: {next_url}')
                 get_photo_list(driver, next_url)
 
         # 遷移するまで待つ
@@ -264,7 +267,10 @@ def get_photo_list(driver, url):
         time.sleep(2)
 
     # 写真を1枚ずつ順番に辿って処理する
-    process_one_photo(driver, url, 1, max_page)
+    page = 1
+    if 'page=' in url:
+        page = int(url.split('page=')[1])
+    process_one_photo(driver, url, page, max_page)
 
 
 def main():
