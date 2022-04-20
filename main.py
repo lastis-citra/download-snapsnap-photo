@@ -240,6 +240,8 @@ def process_one_photo(driver, url, page, max_page):
                 next_url = f'{url}?page={str(page)}'
                 print(f'next_url: {next_url}')
                 get_photo_list(driver, next_url)
+            else:
+                exit()
 
         # 遷移するまで待つ
         time.sleep(2)
