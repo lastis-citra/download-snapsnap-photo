@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 import cv2
 import tempfile
 import requests
+import sys
 
 
 def write_html(path, source):
@@ -267,6 +268,8 @@ def get_photo_list(driver, url):
 
 
 def main():
+    # 参考: https://algorithm.joho.info/programming/python/maximum-recursion-depth-exceeded-while-calling-a-python-object/
+    sys.setrecursionlimit(10000)
     url = os.environ.get('URL')
     user_id = os.environ.get('ID')
     user_password = os.environ.get('PASSWORD')
