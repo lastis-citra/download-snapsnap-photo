@@ -236,7 +236,7 @@ def process_one_photo(driver, url, page, max_page):
             page += 1
             if page <= max_page:
                 if '?page=' in url:
-                    url = int(url.split('?page=')[0])
+                    url = url.split('?page=')[0]
                 next_url = f'{url}?page={str(page)}'
                 print(f'next_url: {next_url}')
                 get_photo_list(driver, next_url)
