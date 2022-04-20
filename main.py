@@ -4,6 +4,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome import service as cs
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as ec
 from bs4 import BeautifulSoup
 import cv2
 import tempfile
@@ -101,8 +103,8 @@ def process_one_photo(driver, url, page, max_page):
         # 透かしをずらす
         driver.find_element(by=By.CLASS_NAME, value='editLogoBtn').click()
 
-        # 遷移するまで待つ
-        time.sleep(2)
+        # ID指定したページ上の要素が読み込まれるまで待機（10秒でタイムアウト判定）
+        WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.CLASS_NAME, 'viewer-move')))
 
         html = driver.page_source.encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
@@ -255,8 +257,8 @@ def get_photo_list(driver, url):
         # 写真一覧ページへ遷移
         driver.get(url)
 
-        # 遷移するまで待つ
-        time.sleep(5)
+        # ID指定したページ上の要素が読み込まれるまで待機（10秒でタイムアウト判定）
+        WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.CLASS_NAME, 'info')))
 
         html = driver.page_source.encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
@@ -265,8 +267,8 @@ def get_photo_list(driver, url):
         # 1枚目の写真を拡大
         driver.find_element(by=By.CLASS_NAME, value='wholeImage').click()
 
-        # 遷移するまで待つ
-        time.sleep(2)
+        # ID指定したページ上の要素が読み込まれるまで待機（10秒でタイムアウト判定）
+        WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.CLASS_NAME, 'viewer-move')))
 
     # 写真を1枚ずつ順番に辿って処理する
     page = 1
