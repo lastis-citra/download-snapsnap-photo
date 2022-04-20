@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 import cv2
 import tempfile
 import requests
+from requests.adapters import HTTPAdapter
 import sys
 
 
@@ -63,7 +64,13 @@ def imwrite(filename, img, params=None):
 # 参考: https://qiita.com/lt900ed/items/891e162a5a1091bae912
 def imread_web(url: str):
     # 画像をリクエストする
-    res = requests.get(url)
+    headers_dic = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36'}
+    s = requests.Session()
+    s.mount(url, HTTPAdapter(max_retries=5))
+    res = s.get(url, headers=headers_dic)
+
+    # res = requests.get(url, headers=headers_dic)
     img = None
     # Tempfileを作成して即読み込む
     fp = tempfile.NamedTemporaryFile(dir='./', delete=False)
