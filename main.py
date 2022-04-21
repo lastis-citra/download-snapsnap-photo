@@ -257,9 +257,6 @@ def main():
 
         get_photo_list(driver, name, url)
 
-    if not debug_bool:
-        time.sleep(10000)
-
 
 if __name__ == '__main__':
     main()
