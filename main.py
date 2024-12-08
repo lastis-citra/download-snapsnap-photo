@@ -43,6 +43,19 @@ def login(user_id: str, user_password: str, driver_path: str):
     return driver
 
 
+# デバッグ用に画像にグリッド線を引く
+def write_grid(filename, offset_x, offset_y, area_size, postfix):
+    img = cv2.imread(f'./tmp/{filename}.jpg')
+    height, width = img.shape[:2]
+
+    # 横線を引く：offset_yからheightの手前までarea_sizeおきに白い(BGRすべて255)横線を引く
+    img[offset_y:height:area_size, :, :] = 0
+    # 縦線を引く：offset_xからwidthの手前までarea_sizeおきに白い(BGRすべて255)縦線を引く
+    img[:, offset_x:width:area_size, :] = 0
+
+    cv2.imwrite(f'./tmp/{filename}_{postfix}.jpg', img)
+
+
 # https://qiita.com/SKYS/items/cbde3775e2143cad7455
 def imwrite(filename, img, params=None):
     try:
@@ -86,25 +99,61 @@ def imread_web(url: str):
 
 
 # img2にimg1の透かしがない部分をマージして，マージ後のimg1を返す
-def merge_photos(offset_x: int, offset_y: int, max_x: int, max_y: int, width: int, img1, img2):
-    for x in range(max_x):
-        for y in range(max_y):
-            # width*widthのサイズで切り出す
-            if x % 3 == 0 and y % 3 == 0 or x % 3 == 2 and y % 3 == 1 or x % 3 == 1 and y % 3 == 2:
-                piece_x = offset_x + x * width
-                piece_y = offset_y + y * width
-                # print(f'piece_x: {piece_x}, piece_y: {piece_y}')
-                img2_piece = img2[piece_y:piece_y + width, piece_x:piece_x + width]
-                # cv2.imshow('contourimg', img2_piece)
-                # cv2.waitKey(0)
-                # 切り出した画像をもう1枚の同じ場所に貼る
-                img1[piece_y:piece_y + width, piece_x:piece_x + width] = img2_piece
+#  0  1  2  3  4  5（offset_y = 0の場合，この行は存在しない
+#  6  7  8  9 10 11
+# 12 13 14 15 16 17
+# 0～5はオフセット部分なので，ここは1枚目がそのまま残る（つまり上端まで透かしがある場合，offset_yは0にする必要がある）
+def merge_photos(offset_x: int, offset_y: int, max_x: int, max_y: int, width: int, img1, img2, set = 1):
+    if set == 1:
+        for x in range(max_x):
+            for y in range(max_y):
+                # width*widthのサイズで切り出す
+                if x % 3 == 0 and y % 3 == 0 or x % 3 == 2 and y % 3 == 1 or x % 3 == 1 and y % 3 == 2:
+                    piece_x = offset_x + x * width
+                    piece_y = offset_y + y * width
+                    # print(f'piece_x: {piece_x}, piece_y: {piece_y}')
+                    img2_piece = img2[piece_y:piece_y + width, piece_x:piece_x + width]
+                    # cv2.imshow('contourimg', img2_piece)
+                    # cv2.waitKey(0)
+                    # 切り出した画像をもう1枚の同じ場所に貼る
+                    img1[piece_y:piece_y + width, piece_x:piece_x + width] = img2_piece
+    elif set == 2:
+        for x in range(max_x + 1):
+            for y in range(max_y + 1):
+                # width*widthのサイズで切り出す
+                if x % 3 == 1 and y % 3 == 1 or x % 3 == 2 and y % 3 == 0 or x % 3 == 0 and y % 3 == 2:
+                    piece_x = offset_x + (x - 1) * width
+                    piece_y = offset_y + (y - 1) * width
+                    if piece_x < 0:
+                        piece_x = 0
+                    if piece_y < 0:
+                        piece_y = 0
+                    # print(f'piece_x: {piece_x}, piece_y: {piece_y}')
+                    img2_piece = img2[piece_y:piece_y + width, piece_x:piece_x + width]
+                    # cv2.imshow('contourimg', img2_piece)
+                    # cv2.waitKey(0)
+                    # 切り出した画像をもう1枚の同じ場所に貼る
+                    img1[piece_y:piece_y + width, piece_x:piece_x + width] = img2_piece
+    elif set == 3:
+        for x in range(max_x):
+            for y in range(max_y):
+                # width*widthのサイズで切り出す
+                if x % 6 == 4 and y % 3 == 0:
+                    piece_x = offset_x + x * width
+                    piece_y = offset_y + y * width
+                    # print(f'piece_x: {piece_x}, piece_y: {piece_y}')
+                    img2_piece = img2[piece_y:piece_y + width, piece_x:piece_x + width]
+                    # cv2.imshow('contourimg', img2_piece)
+                    # cv2.waitKey(0)
+                    # 切り出した画像をもう1枚の同じ場所に貼る
+                    img1[piece_y:piece_y + width, piece_x:piece_x + width] = img2_piece
     return img1
 
 
 def process_one_photo(driver, name: str, url: str, page: int, max_page: int):
     img1 = None
     img2 = None
+    img3 = None
     output_dir = f'./output/{name}/'
     os.makedirs(output_dir, exist_ok=True)
 
@@ -139,10 +188,11 @@ def process_one_photo(driver, name: str, url: str, page: int, max_page: int):
         else:
             img1 = imread_web(img_tag['src'])
     else:
-        photo_number = '1-2'
+        photo_number = '9-2'
         output_dir = './tmp/'
-        img1 = cv2.imread('./tmp/1.jpg')
-        img2 = cv2.imread('./tmp/2.jpg')
+        img1 = cv2.imread('./tmp/9.jpg')
+        img2 = cv2.imread('./tmp/10.jpg')
+        img3 = cv2.imread('./tmp/black.jpg')
 
     # 画像サイズ取得
     height, width, channels = img1.shape[:3]
@@ -166,6 +216,32 @@ def process_one_photo(driver, name: str, url: str, page: int, max_page: int):
         offset_y2 = int(area_size / 2)
         img1 = merge_photos(offset_x1, offset_y1, 10, 15, area_size, img1, img2)
         img1 = merge_photos(offset_x2, offset_y2, 10, 15, area_size, img1, img2)
+    # 横画像の場合
+    elif width == 1800 and round(height / 100) * 100 == 1200:
+        offset_x1 = 0
+        offset_y1 = 0
+        area_size = 124
+        # write_grid('7', offset_x1, offset_y1, area_size, 'grid')
+        # write_grid('8', offset_x1, offset_y1, area_size, 'grid')
+        offset_x2 = offset_x1 - int(area_size / 2)
+        offset_y2 = int(area_size / 2)
+        img1 = merge_photos(offset_x1, offset_y1, 15, 10, area_size, img1, img2)
+        img1 = merge_photos(offset_x2, offset_y2, 15, 10, area_size, img1, img2)
+    elif round(width / 100) * 100 == 1200 and height == 1800:
+        offset_x1 = 124
+        offset_y1 = 50
+        area_size = 124
+        # write_grid('9', offset_x1, offset_y1, area_size, 'grid')
+        # write_grid('10', offset_x1, offset_y1, area_size, 'grid')
+        offset_x2 = offset_x1 - int(area_size / 2)
+        offset_y2 = int(area_size / 2)
+        # write_grid('9', offset_x2, offset_y2, int(area_size / 2), 'grid2')
+        # write_grid('10', offset_x2, offset_y2, int(area_size / 2), 'grid2')
+        img2_1 = img2.copy()
+        img4 = merge_photos(offset_x1, offset_y1, 10, 15, area_size, img2, img1, 2)
+        img4 = merge_photos(offset_x2, offset_y2, 10, 15, area_size, img4, img1, 2)
+        img2 = merge_photos(offset_x2, offset_y2, 30, 2, int(area_size / 2), img4, img2_1, 3)
+        img1 = img2.copy()
     else:
         print('Check photo size!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
     imwrite(f'{output_dir}{photo_number}.jpg', img1)
@@ -220,14 +296,21 @@ def get_photo_list(driver, name: str, url: str):
 
 
 def input_urls():
-    file_name = 'input_urls.txt'
+    file_name = 'input_urls.conf'
+    line_list2 = []
+
     if os.path.exists(file_name):
         with open(file_name, 'r', errors='replace', encoding="utf_8") as file:
             line_list = file.readlines()
     else:
         line_list = None
 
-    return line_list
+    for line in line_list:
+        if line.startswith(';'):
+            continue
+        line_list2.append(line)
+
+    return line_list2
 
 
 def main():

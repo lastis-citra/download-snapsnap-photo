@@ -5,4 +5,4 @@
 /tmp/
 *.html
 *json
-input_urls.txt
+input_urls.conf
