@@ -150,7 +150,7 @@ def merge_photos(offset_x: int, offset_y: int, max_x: int, max_y: int, width: in
     return img1
 
 
-def process_one_photo(driver, name: str, url: str, page: int, max_page: int):
+def process_one_photo(driver, name: str, url: str, page: int, max_page: int, whole_image_elements, count: int):
     img1 = None
     img2 = None
     img3 = None
@@ -255,17 +255,25 @@ def process_one_photo(driver, name: str, url: str, page: int, max_page: int):
             # ID指定したページ上の要素が読み込まれるまで待機（10秒でタイムアウト判定）
             WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.CLASS_NAME, 'viewer-move')))
             # 再帰処理
-            process_one_photo(driver, name, url, page, max_page)
+            process_one_photo(driver, name, url, page, max_page, whole_image_elements, count + 1)
         else:
-            # # 写真詳細表示を閉じる
-            # driver.find_element(by=By.CLASS_NAME, value='close').click()
-            page += 1
-            if page <= max_page:
-                if '?page=' in url:
-                    url = url.split('?page=')[0]
-                next_url = f'{url}?page={str(page)}'
-                print(f'next_url: {next_url}')
-                get_photo_list(driver, name, next_url)
+            print('count: ' + str(count) + ', len(whole_image_elements): ' + str(len(whole_image_elements)))
+            # uchinokoのURLの場合，NEXTで辿ってもすべてを表示しきれないので，まだ写真が残っていればそこから再帰処理を再開する
+            if len(whole_image_elements) - 1 > count:
+                # 写真詳細表示を閉じる
+                driver.find_element(by=By.CLASS_NAME, value='close').click()
+                whole_image_elements[count + 1].click()
+                # ID指定したページ上の要素が読み込まれるまで待機（10秒でタイムアウト判定）
+                WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.CLASS_NAME, 'viewer-move')))
+                process_one_photo(driver, name, url, page, max_page, whole_image_elements, count + 1)
+            else:
+                page += 1
+                if page <= max_page:
+                    if '?page=' in url:
+                        url = url.split('?page=')[0]
+                    next_url = f'{url}?page={str(page)}'
+                    print(f'next_url: {next_url}')
+                    get_photo_list(driver, name, next_url)
     return
 
 
@@ -277,22 +285,26 @@ def get_photo_list(driver, name: str, url: str):
 
         # ID指定したページ上の要素が読み込まれるまで待機（10秒でタイムアウト判定）
         WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.CLASS_NAME, 'info')))
-
         html = driver.page_source.encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
-        max_page = int(soup.select_one('div[class="info"]').text.split('ページ中')[0])
+        element = soup.select_one('div[class="info"]')
+        max_page = 1
+        if element:
+            max_page = int(element.text.split('ページ中')[0])
 
         # 1枚目の写真を拡大
-        driver.find_element(by=By.CLASS_NAME, value='wholeImage').click()
+        # driver.find_element(by=By.CLASS_NAME, value='wholeImage').click()
+        whole_image_elements = driver.find_elements(by=By.CLASS_NAME, value='wholeImage')
+        whole_image_elements[0].click()
 
         # ID指定したページ上の要素が読み込まれるまで待機（10秒でタイムアウト判定）
         WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.CLASS_NAME, 'viewer-move')))
 
-    # 写真を1枚ずつ順番に辿って処理する
-    page = 1
-    if 'page=' in url:
-        page = int(url.split('page=')[1])
-    process_one_photo(driver, name, url, page, max_page)
+        # 写真を1枚ずつ順番に辿って処理する
+        page = 1
+        if 'page=' in url:
+            page = int(url.split('page=')[1])
+        process_one_photo(driver, name, url, page, max_page, whole_image_elements, 0)
 
 
 def input_urls():
