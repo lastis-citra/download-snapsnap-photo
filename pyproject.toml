@@ -1,0 +1,13 @@
+[project]
+name = "download-snapsnap-photo"
+requires-python = ">=3.14"
+dynamic = ["version"]
+dependencies = [
+    "requests",
+    "beautifulsoup4",
+    "selenium",
+    "opencv-python",
+]
+
+[tool.setuptools]
+py-modules = []
