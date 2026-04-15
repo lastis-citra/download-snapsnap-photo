@@ -217,7 +217,7 @@ def process_one_photo(driver, name: str, url: str, page: int, max_page: int, who
         img1 = merge_photos(offset_x1, offset_y1, 10, 15, area_size, img1, img2)
         img1 = merge_photos(offset_x2, offset_y2, 10, 15, area_size, img1, img2)
     # 横画像の場合
-    elif width == 1800 and round(height / 100) * 100 == 1200:
+    elif width == 1800 and (round(height / 100) * 100 == 1200 or round(height / 100) * 100 == 1300):
         offset_x1 = 0
         offset_y1 = 0
         area_size = 124
@@ -227,6 +227,7 @@ def process_one_photo(driver, name: str, url: str, page: int, max_page: int, who
         offset_y2 = int(area_size / 2)
         img1 = merge_photos(offset_x1, offset_y1, 15, 10, area_size, img1, img2)
         img1 = merge_photos(offset_x2, offset_y2, 15, 10, area_size, img1, img2)
+    # 縦画像の場合
     elif round(width / 100) * 100 == 1200 and height == 1800:
         offset_x1 = 124
         offset_y1 = 50
